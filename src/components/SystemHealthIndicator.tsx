@@ -200,7 +200,7 @@ export default function SystemHealthIndicator() {
                   color: theme.colors.text.primary,
                 }}
               >
-                Python Backend
+                Pathway Backend
               </p>
               <p
                 style={{

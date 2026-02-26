@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import dbConnect from '@/lib/mongodb';
-import ParkingLot from '@/models/ParkingLot';
-import Contractor from '@/models/Contractor';
-import CapacityLog from '@/models/CapacityLog';
-import { requireAuth, handleAuthError } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import dbConnect from "@/lib/mongodb";
+import ParkingLot from "@/models/ParkingLot";
+import Contractor from "@/models/Contractor";
+import CapacityLog from "@/models/CapacityLog";
+import { requireAuth, handleAuthError } from "@/lib/auth";
 
 // Validation schema for creating a parking lot
 const createParkingLotSchema = z.object({
@@ -17,7 +17,7 @@ const createParkingLotSchema = z.object({
     }),
   }),
   totalSlots: z.number().int().min(1).max(500),
-  contractorId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid contractor ID'),
+  contractorId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid contractor ID"),
 });
 
 /**
@@ -33,14 +33,14 @@ export async function GET(request: NextRequest) {
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const contractorId = searchParams.get('contractorId');
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const status = searchParams.get("status");
+    const contractorId = searchParams.get("contractorId");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
 
     // Build filter
     const filter: any = {};
-    if (status && (status === 'active' || status === 'inactive')) {
+    if (status && (status === "active" || status === "inactive")) {
       filter.status = status;
     }
     if (contractorId) {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     // Fetch parking lots
     const [parkingLots, total] = await Promise.all([
       ParkingLot.find(filter)
-        .populate('contractorId', 'name status')
+        .populate("contractorId", "name status")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -81,25 +81,18 @@ export async function GET(request: NextRequest) {
               }
             : null,
         };
-      })
+      }),
     );
 
-    return NextResponse.json(
-      {
-        data: parkingLotsWithOccupancy,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
+    return NextResponse.json({
+      data: parkingLotsWithOccupancy,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
-        },
-      }
-    );
+    });
   } catch (error) {
     return handleAuthError(error);
   }
@@ -113,10 +106,10 @@ export async function POST(request: NextRequest) {
   try {
     // Require admin role
     const session = await requireAuth();
-    if (session.user.role !== 'admin') {
+    if (session.user.role !== "admin") {
       return NextResponse.json(
-        { error: 'Insufficient permissions', message: 'Admin role required' },
-        { status: 403 }
+        { error: "Insufficient permissions", message: "Admin role required" },
+        { status: 403 },
       );
     }
 
@@ -129,13 +122,13 @@ export async function POST(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: 'Validation failed',
+          error: "Validation failed",
           details: validationResult.error.issues.map((err) => ({
-            field: err.path.join('.'),
+            field: err.path.join("."),
             message: err.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -156,7 +149,7 @@ export async function POST(request: NextRequest) {
         x2: 0,
         y2: 0,
       },
-      status: 'empty' as const,
+      status: "empty" as const,
       lastUpdated: new Date(),
     }));
 
@@ -168,42 +161,48 @@ export async function POST(request: NextRequest) {
       contractorId: data.contractorId,
       gateCamera: {
         id: gateCameraId,
-        status: 'active',
+        status: "active",
         lastSeen: new Date(),
       },
       lotCamera: {
         id: lotCameraId,
-        status: 'active',
+        status: "active",
         lastSeen: new Date(),
       },
       slots: slots,
-      status: 'active',
+      status: "active",
     });
 
     return NextResponse.json(
       {
         data: parkingLot,
-        message: 'Parking lot created successfully',
+        message: "Parking lot created successfully",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
-    if (error.name === 'AuthenticationError' || error.name === 'AuthorizationError') {
+    if (
+      error.name === "AuthenticationError" ||
+      error.name === "AuthorizationError"
+    ) {
       return handleAuthError(error);
     }
 
     // Handle duplicate camera ID error
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'Duplicate camera ID', message: 'Camera ID already exists' },
-        { status: 409 }
+        { error: "Duplicate camera ID", message: "Camera ID already exists" },
+        { status: 409 },
       );
     }
 
-    console.error('Error creating parking lot:', error);
+    console.error("Error creating parking lot:", error);
     return NextResponse.json(
-      { error: 'Internal server error', message: 'Failed to create parking lot' },
-      { status: 500 }
+      {
+        error: "Internal server error",
+        message: "Failed to create parking lot",
+      },
+      { status: 500 },
     );
   }
 }

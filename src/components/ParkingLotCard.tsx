@@ -73,9 +73,9 @@ function getOccupancyBadgeColor(occupancyRate: number): string {
 }
 
 export default function ParkingLotCard({ lot }: ParkingLotCardProps) {
-  const occupancyRate = lot.currentOccupancy?.occupancyRate || 0;
+  const occupancyRate = (lot.currentOccupancy?.occupancyRate || 0) * 100;
   const occupied = lot.currentOccupancy?.occupied || 0;
-  const empty = lot.currentOccupancy?.empty || lot.totalSlots;
+  const empty = lot.currentOccupancy?.empty ?? lot.totalSlots;
   const colors = getOccupancyColor(occupancyRate);
 
   return (

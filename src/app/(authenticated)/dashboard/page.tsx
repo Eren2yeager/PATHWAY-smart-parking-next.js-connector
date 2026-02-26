@@ -89,7 +89,34 @@ export default function DashboardPage() {
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchParkingLots, 30000);
 
-    return () => clearInterval(interval);
+    // Real-time: patch occupancy in-state whenever Pathway fires a capacity_update
+    const es = new EventSource("/api/sse/dashboard");
+    es.addEventListener("capacity_update", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setParkingLots((prev) =>
+          prev.map((lot) =>
+            lot._id === payload.parkingLotId
+              ? {
+                  ...lot,
+                  currentOccupancy: {
+                    occupied: payload.occupied,
+                    empty: payload.empty,
+                    occupancyRate: payload.occupancyRate,
+                    lastUpdated: payload.timestamp,
+                  },
+                }
+              : lot,
+          ),
+        );
+      } catch (_) {}
+    });
+    es.onerror = () => es.close();
+
+    return () => {
+      clearInterval(interval);
+      es.close();
+    };
   }, []);
 
   const handleAlertUpdate = () => {
