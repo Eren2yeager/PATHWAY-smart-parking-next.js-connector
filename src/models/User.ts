@@ -4,10 +4,15 @@ export interface IUser extends Document {
   email: string;
   name: string;
   role: 'admin' | 'operator' | 'viewer';
-  googleId: string;
+  googleId?: string;
+  password?: string;
   image?: string;
   createdAt: Date;
   lastLogin: Date;
+  resetPasswordOTP?: string;
+  resetPasswordExpiry?: Date;
+  isVerified?: boolean;
+  needsPasswordSetup?: boolean;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -15,6 +20,7 @@ const UserSchema = new Schema<IUser>(
     email: {
       type: String,
       required: true,
+      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -31,8 +37,11 @@ const UserSchema = new Schema<IUser>(
     },
     googleId: {
       type: String,
-      required: true,
+      sparse: true,
       unique: true,
+    },
+    password: {
+      type: String,
     },
     image: {
       type: String,
@@ -40,6 +49,20 @@ const UserSchema = new Schema<IUser>(
     lastLogin: {
       type: Date,
       default: Date.now,
+    },
+    resetPasswordOTP: {
+      type: String,
+    },
+    resetPasswordExpiry: {
+      type: Date,
+    },
+    isVerified: {
+      type: Boolean,
+      default: true, // Default true for Google OAuth users
+    },
+    needsPasswordSetup: {
+      type: Boolean,
+      default: false,
     },
   },
   {

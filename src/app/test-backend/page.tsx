@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { ParkingWebSocket } from '@/lib/websocket-client';
+import { ParkingWebSocket } from '@/lib/realtime/websocket-client';
 
 type TestMode = 'http' | 'websocket' | 'stream' | 'remote';
 type EndpointType = 'gate' | 'lot' | 'vehicle';

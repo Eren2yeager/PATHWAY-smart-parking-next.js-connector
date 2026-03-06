@@ -8,6 +8,7 @@ declare module 'next-auth' {
       name: string;
       image?: string;
       role: 'admin' | 'operator' | 'viewer';
+      needsPasswordSetup?: boolean;
     } & DefaultSession['user'];
   }
 
@@ -17,6 +18,7 @@ declare module 'next-auth' {
     name: string;
     image?: string;
     role: 'admin' | 'operator' | 'viewer';
+    needsPasswordSetup?: boolean;
   }
 }
 
@@ -24,5 +26,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     role: 'admin' | 'operator' | 'viewer';
+    needsPasswordSetup?: boolean;
   }
 }

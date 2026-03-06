@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/components/shadcnComponents/Hyperspeed.jsx", "src/app/page.jsx", "src/components/landing/feature-card.tsx"  ],
   "exclude": ["node_modules"]
 }

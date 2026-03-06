@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { WebRTCClient, Detection } from '@/lib/webrtc-client';
-import CameraPreview from '@/components/CameraPreview';
+import { WebRTCClient, Detection } from '@/lib/realtime/webrtc-client';
+import CameraPreview from '@/components/camera/CameraPreview';
 
 function CameraPageContent() {
   const searchParams = useSearchParams();

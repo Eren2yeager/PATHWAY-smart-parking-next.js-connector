@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Filter, Calendar, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
-import ViolationCard from '@/components/ViolationCard';
+import { Filter, Calendar as CalendarIcon, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import ViolationCard from '@/components/cards/ViolationCard';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Button } from '@/components/shadcnComponents/button';
+import { Card, CardContent } from '@/components/shadcnComponents/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcnComponents/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shadcnComponents/popover';
+import { Calendar } from '@/components/shadcnComponents/calendar';
 
 interface Violation {
   _id: string;
@@ -182,206 +187,308 @@ export default function ViolationsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Violations</h1>
-        <p className="text-gray-600">Monitor and manage contractor violations</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] mb-2">Violations</h1>
+        <p className="text-gray-600 dark:text-[#9ca3af]">Monitor and manage contractor violations</p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Total</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb]">{stats.total}</p>
+              </div>
+              <AlertTriangle className="w-8 h-8 text-gray-400 dark:text-[#71717a]" />
             </div>
-            <AlertTriangle className="w-8 h-8 text-gray-400" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-red-600">{stats.pending}</p>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Pending</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.pending}</p>
+              </div>
+              <AlertTriangle className="w-8 h-8 text-red-400 dark:text-red-500" />
             </div>
-            <AlertTriangle className="w-8 h-8 text-red-400" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Acknowledged</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.acknowledged}</p>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Acknowledged</p>
+                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.acknowledged}</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-400 dark:text-yellow-500" />
             </div>
-            <Clock className="w-8 h-8 text-yellow-400" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Resolved</p>
-              <p className="text-2xl font-bold text-green-600">{stats.resolved}</p>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Resolved</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.resolved}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-400 dark:text-green-500" />
             </div>
-            <CheckCircle className="w-8 h-8 text-green-400" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Penalty</p>
-              <p className="text-2xl font-bold text-gray-900">₹{stats.totalPenalty}</p>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Total Penalty</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb]">₹{stats.totalPenalty}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-gray-400 dark:text-[#71717a]" />
             </div>
-            <TrendingUp className="w-8 h-8 text-gray-400" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Violation Trend Chart */}
       {trendData.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Violation Trend</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="violations"
-                stroke="#ef4444"
-                strokeWidth={2}
-                name="Violations"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-[#e5e7eb] mb-4">Violation Trend</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                <XAxis dataKey="date" stroke="#9ca3af" />
+                <YAxis stroke="#9ca3af" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    border: '1px solid #374151',
+                    borderRadius: '0.5rem',
+                    color: '#e5e7eb'
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="violations"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  name="Violations"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <h3 className="text-lg font-bold text-gray-900">Filters</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Status Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="acknowledged">Acknowledged</option>
-              <option value="resolved">Resolved</option>
-            </select>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-gray-500 dark:text-[#71717a]" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-[#e5e7eb]">Filters</h3>
           </div>
 
-          {/* Contractor Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Contractor</label>
-            <select
-              value={contractorFilter}
-              onChange={(e) => setContractorFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Contractors</option>
-              {contractors.map((contractor) => (
-                <option key={contractor._id} value={contractor._id}>
-                  {contractor.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-[#d1d5db] mb-2">Status</label>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as any)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="acknowledged">Acknowledged</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Contractor Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-[#d1d5db] mb-2">Contractor</label>
+              <Select
+                value={contractorFilter}
+                onValueChange={(value) => setContractorFilter(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Contractors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Contractors</SelectItem>
+                  {contractors.map((contractor) => (
+                    <SelectItem key={contractor._id} value={contractor._id}>
+                      {contractor.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date Range Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-[#d1d5db] mb-2">Date Range</label>
+              <Select
+                value={dateRange}
+                onValueChange={(value) => setDateRange(value as any)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Last 30 Days" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="90d">Last 90 Days</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Custom Date Range */}
+            {dateRange === 'custom' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#d1d5db] mb-2">Start Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-between text-left font-normal ${
+                          !customStartDate ? 'text-muted-foreground' : ''
+                        }`}
+                      >
+                        {customStartDate ? (
+                          format(new Date(customStartDate), 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="w-4 h-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customStartDate ? new Date(customStartDate) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setCustomStartDate(format(date, 'yyyy-MM-dd'));
+                          } else {
+                            setCustomStartDate('');
+                          }
+                        }}
+                        defaultMonth={customStartDate ? new Date(customStartDate) : undefined}
+                        disabled={(date: Date) => {
+                          // Disable dates after end date if set
+                          if (customEndDate) {
+                            return date > new Date(customEndDate);
+                          }
+                          return false;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#d1d5db] mb-2">End Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-between text-left font-normal ${
+                          !customEndDate ? 'text-muted-foreground' : ''
+                        }`}
+                      >
+                        {customEndDate ? (
+                          format(new Date(customEndDate), 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="w-4 h-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customEndDate ? new Date(customEndDate) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setCustomEndDate(format(date, 'yyyy-MM-dd'));
+                          } else {
+                            setCustomEndDate('');
+                          }
+                        }}
+                        defaultMonth={customEndDate ? new Date(customEndDate) : undefined}
+                        disabled={(date: Date) => {
+                          // Disable dates before start date or after today
+                          const today = new Date();
+                          if (customStartDate) {
+                            return date < new Date(customStartDate) || date > today;
+                          }
+                          return date > today;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Date Range Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-              <option value="custom">Custom Range</option>
-            </select>
-          </div>
-
-          {/* Custom Date Range */}
-          {dateRange === 'custom' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </>
+          {/* Results Count */}
+          {!loading && (
+            <div className="mt-4 text-sm text-gray-600 dark:text-[#9ca3af]">
+              Showing {violations.length} violation{violations.length !== 1 ? 's' : ''}
+            </div>
           )}
-        </div>
-
-        {/* Results Count */}
-        {!loading && (
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {violations.length} violation{violations.length !== 1 ? 's' : ''}
-          </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Violations List */}
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-            </div>
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-6 bg-gray-200 dark:bg-[#2a2e37] rounded w-1/3 mb-4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-[#2a2e37] rounded w-1/2 mb-4"></div>
+                <div className="h-3 bg-gray-200 dark:bg-[#2a2e37] rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-[#2a2e37] rounded w-2/3"></div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-800">{error}</p>
-          <button
-            onClick={fetchViolations}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-          >
-            Retry
-          </button>
-        </div>
+        <Card className="border-red-200 dark:border-red-800">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+            <p className="text-red-800 dark:text-red-300 mb-4">{error}</p>
+            <Button onClick={fetchViolations} variant="destructive">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       ) : violations.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
-          <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">No violations found</p>
-          <p className="text-sm text-gray-500">
-            {statusFilter !== 'all' || contractorFilter !== 'all'
-              ? 'Try adjusting your filters'
-              : 'No violations have been recorded in this time period'}
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-12 text-center">
+            <AlertTriangle className="w-12 h-12 text-gray-400 dark:text-[#71717a] mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-[#9ca3af] mb-2">No violations found</p>
+            <p className="text-sm text-gray-500 dark:text-[#71717a]">
+              {statusFilter !== 'all' || contractorFilter !== 'all'
+                ? 'Try adjusting your filters'
+                : 'No violations have been recorded in this time period'}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-4">
           {violations.map((violation) => (

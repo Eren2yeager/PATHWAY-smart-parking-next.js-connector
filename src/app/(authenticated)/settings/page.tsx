@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Settings as SettingsIcon, Users, Loader2, AlertCircle } from 'lucide-react';
-import SettingsForm from '@/components/SettingsForm';
-import UserManagement from '@/components/UserManagement';
+import SettingsForm from '@/components/forms/SettingsForm';
+import UserManagement from '@/components/misc/UserManagement';
 
 interface Settings {
   _id: string;
@@ -95,21 +95,21 @@ export default function SettingsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">Configure system settings and manage user permissions</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400">Configure system settings and manage user permissions</p>
       </div>
 
       {/* Access Denied Error */}
       {error && error.includes('permission') && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-6">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
+            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-red-800 font-medium">Access Denied</p>
-              <p className="text-red-700 text-sm mt-1">{error}</p>
+              <p className="text-red-800 dark:text-red-300 font-medium">Access Denied</p>
+              <p className="text-red-700 dark:text-red-400 text-sm mt-1">{error}</p>
               <button
                 onClick={() => router.push('/dashboard')}
-                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                className="mt-4 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition"
               >
                 Go to Dashboard
               </button>
@@ -121,15 +121,15 @@ export default function SettingsPage() {
       {/* Tabs */}
       {!error?.includes('permission') && (
         <>
-          <div className="bg-white rounded-lg shadow border border-gray-200">
-            <div className="border-b border-gray-200">
+          <div className="bg-white dark:bg-[#111316] rounded-lg shadow border border-gray-200 dark:border-[#2a2e37]">
+            <div className="border-b border-gray-200 dark:border-[#2a2e37]">
               <nav className="flex -mb-px">
                 <button
                   onClick={() => setActiveTab('system')}
                   className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
                     activeTab === 'system'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <SettingsIcon className="w-5 h-5" />
@@ -139,8 +139,8 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab('users')}
                   className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
                     activeTab === 'users'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Users className="w-5 h-5" />
@@ -158,13 +158,13 @@ export default function SettingsPage() {
                       <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                     </div>
                   ) : error && !error.includes('permission') ? (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                      <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-                      <p className="text-red-800 font-medium mb-2">Error Loading Settings</p>
-                      <p className="text-red-700 text-sm mb-4">{error}</p>
+                    <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+                      <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-400 mx-auto mb-4" />
+                      <p className="text-red-800 dark:text-red-300 font-medium mb-2">Error Loading Settings</p>
+                      <p className="text-red-700 dark:text-red-400 text-sm mb-4">{error}</p>
                       <button
                         onClick={fetchSettings}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                        className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition"
                       >
                         Retry
                       </button>
@@ -186,8 +186,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Admin Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
               <strong>Admin Access:</strong> This page is only accessible to users with the admin
               role. Changes to system settings will affect all users and parking lots.
             </p>

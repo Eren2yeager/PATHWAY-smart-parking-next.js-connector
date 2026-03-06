@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, RefreshCw } from 'lucide-react';
-import VehicleRecordTable from '@/components/VehicleRecordTable';
-import RecordFilters, { FilterValues } from '@/components/RecordFilters';
-import { exportFilteredRecords } from '@/lib/export-csv';
+import { Download, RefreshCw, AlertTriangle } from 'lucide-react';
+import VehicleRecordTable from '@/components/tables/VehicleRecordTable';
+import RecordFilters, { FilterValues } from '@/components/dashboard/RecordFilters';
+import { exportFilteredRecords } from '@/lib/reporting/export-csv';
+import { Button } from '@/components/shadcnComponents/button';
+import { Card, CardContent } from '@/components/shadcnComponents/card';
+import { Badge } from '@/components/shadcnComponents/badge';
 
 interface VehicleRecord {
   _id: string;
@@ -123,32 +126,29 @@ export default function RecordsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Vehicle Records</h1>
-            <p className="text-gray-600 mt-1">
-              View and export vehicle entry and exit records
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-            <button
-              onClick={handleExport}
-              disabled={exporting || loading || records.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download className="w-4 h-4" />
-              <span>{exporting ? 'Exporting...' : 'Export CSV'}</span>
-            </button>
-          </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb]">Vehicle Records</h1>
+          <p className="text-gray-600 dark:text-[#9ca3af] mt-1">
+            View and export vehicle entry and exit records
+          </p>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Button
+            onClick={handleRefresh}
+            disabled={loading}
+            variant="outline"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={handleExport}
+            disabled={exporting || loading || records.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
         </div>
       </div>
 
@@ -157,36 +157,46 @@ export default function RecordsPage() {
 
       {/* Stats */}
       {!loading && !error && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Showing <span className="font-medium text-gray-900">{records.length}</span> of{' '}
-              <span className="font-medium text-gray-900">{pagination.total}</span> records
-            </div>
-            {(filters.parkingLotId || filters.status || filters.startDate || filters.endDate) && (
-              <div className="text-sm text-blue-600">
-                Filters applied
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="text-sm text-gray-600 dark:text-[#9ca3af]">
+                Showing <span className="font-medium text-gray-900 dark:text-[#e5e7eb]">{records.length}</span> of{' '}
+                <span className="font-medium text-gray-900 dark:text-[#e5e7eb]">{pagination.total}</span> records
               </div>
-            )}
-          </div>
-        </div>
+              {(filters.parkingLotId || filters.status || filters.startDate || filters.endDate) && (
+                <Badge variant="secondary">
+                  Filters applied
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error}</p>
-        </div>
+        <Card className="border-red-200 dark:border-red-800">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+            <p className="text-red-800 dark:text-red-300">{error}</p>
+            <Button onClick={handleRefresh} variant="destructive" className="mt-4">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Loading State */}
       {loading && (
-        <div className="bg-white rounded-lg shadow p-8">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading records...</span>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <span className="ml-3 text-gray-600 dark:text-[#9ca3af]">Loading records...</span>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Table */}
@@ -199,32 +209,7 @@ export default function RecordsPage() {
         />
       )}
 
-      {/* Empty State */}
-      {!loading && !error && records.length === 0 && (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <div className="text-gray-400 mb-4">
-            <svg
-              className="mx-auto h-12 w-12"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No records found</h3>
-          <p className="text-gray-500">
-            {(filters.parkingLotId || filters.status || filters.startDate || filters.endDate)
-              ? 'Try adjusting your filters to see more results.'
-              : 'Vehicle records will appear here once vehicles enter parking lots.'}
-          </p>
-        </div>
-      )}
+     
     </div>
   );
 }

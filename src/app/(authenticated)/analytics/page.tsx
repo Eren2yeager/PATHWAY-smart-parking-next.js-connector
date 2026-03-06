@@ -3,14 +3,17 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { subDays } from 'date-fns';
 import { BarChart3, TrendingUp, Clock, Filter, FileText } from 'lucide-react';
-import DateRangePicker from '@/components/DateRangePicker';
-import { SkeletonRectangle } from '@/components/SkeletonLoader';
+import DateRangePicker from '@/components/forms/DateRangePicker';
+import { SkeletonRectangle } from '@/components/misc/SkeletonLoader';
+import { Button } from '@/components/shadcnComponents/button';
+import { Card, CardContent } from '@/components/shadcnComponents/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcnComponents/select';
 
 // Code-split heavy chart components
-const OccupancyTrendChart = lazy(() => import('@/components/OccupancyTrendChart'));
-const ContractorComparisonChart = lazy(() => import('@/components/ContractorComparisonChart'));
-const PeakHoursHeatmap = lazy(() => import('@/components/PeakHoursHeatmap'));
-const ReportModal = lazy(() => import('@/components/ReportModal'));
+const OccupancyTrendChart = lazy(() => import('@/components/charts/OccupancyTrendChart'));
+const ContractorComparisonChart = lazy(() => import('@/components/charts/ContractorComparisonChart'));
+const PeakHoursHeatmap = lazy(() => import('@/components/charts/PeakHoursHeatmap'));
+const ReportModal = lazy(() => import('@/components/modals/ReportModal'));
 
 interface ParkingLot {
   _id: string;
@@ -72,20 +75,19 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] mb-2">Analytics</h1>
+          <p className="text-gray-600 dark:text-[#9ca3af]">
             Comprehensive insights into parking operations and contractor performance
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setIsReportModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <FileText className="w-5 h-5" />
           Generate Report
-        </button>
+        </Button>
       </div>
 
       {/* Filters Section */}
@@ -100,54 +102,62 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Additional Filters */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <h3 className="text-sm font-semibold text-gray-700">Filters</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Parking Lot Filter */}
-            <div>
-              <label htmlFor="parking-lot-filter" className="block text-xs font-medium text-gray-700 mb-2">
-                Parking Lot
-              </label>
-              <select
-                id="parking-lot-filter"
-                value={selectedParkingLot}
-                onChange={(e) => setSelectedParkingLot(e.target.value)}
-                disabled={loadingLots}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-              >
-                <option value="all">All Parking Lots</option>
-                {parkingLots.map((lot) => (
-                  <option key={lot._id} value={lot._id}>
-                    {lot.name}
-                  </option>
-                ))}
-              </select>
+        <Card className="lg:col-span-3">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-5 h-5 text-gray-600 dark:text-[#9ca3af]" />
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-[#d1d5db]">Filters</h3>
             </div>
 
-            {/* Interval Selector */}
-            <div>
-              <label htmlFor="interval-selector" className="block text-xs font-medium text-gray-700 mb-2">
-                Data Interval
-              </label>
-              <select
-                id="interval-selector"
-                value={interval}
-                onChange={(e) => setInterval(e.target.value as 'hour' | 'day')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-              >
-                <option value="hour">Hourly</option>
-                <option value="day">Daily</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                {interval === 'hour' ? 'Best for short periods (≤7 days)' : 'Best for longer periods (>7 days)'}
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Parking Lot Filter */}
+              <div>
+                <label htmlFor="parking-lot-filter" className="block text-xs font-medium text-gray-700 dark:text-[#d1d5db] mb-2">
+                  Parking Lot
+                </label>
+                <Select
+                  value={selectedParkingLot}
+                  onValueChange={(value) => setSelectedParkingLot(value)}
+                  disabled={loadingLots}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All Parking Lots" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Parking Lots</SelectItem>
+                    {parkingLots.map((lot) => (
+                      <SelectItem key={lot._id} value={lot._id}>
+                        {lot.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Interval Selector */}
+              <div>
+                <label htmlFor="interval-selector" className="block text-xs font-medium text-gray-700 dark:text-[#d1d5db] mb-2">
+                  Data Interval
+                </label>
+                <Select
+                  value={interval}
+                  onValueChange={(value) => setInterval(value as 'hour' | 'day')}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select interval" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hour">Hourly</SelectItem>
+                    <SelectItem value="day">Daily</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 dark:text-[#71717a] mt-1">
+                  {interval === 'hour' ? 'Best for short periods (≤7 days)' : 'Best for longer periods (>7 days)'}
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Analytics Sections */}
@@ -155,8 +165,8 @@ export default function AnalyticsPage() {
         {/* Section 1: Occupancy Trends */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">Occupancy Trends</h2>
+            <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-[#e5e7eb]">Occupancy Trends</h2>
           </div>
           <Suspense fallback={<SkeletonRectangle width="100%" height="400px" />}>
             <OccupancyTrendChart
@@ -171,8 +181,8 @@ export default function AnalyticsPage() {
         {/* Section 2: Contractor Performance */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-6 h-6 text-purple-600" />
-            <h2 className="text-xl font-bold text-gray-900">Contractor Performance</h2>
+            <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-[#e5e7eb]">Contractor Performance</h2>
           </div>
           <Suspense fallback={<SkeletonRectangle width="100%" height="400px" />}>
             <ContractorComparisonChart startDate={startDate} endDate={endDate} />
@@ -182,8 +192,8 @@ export default function AnalyticsPage() {
         {/* Section 3: Peak Hours Analysis */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-900">Peak Hours Analysis</h2>
+            <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-[#e5e7eb]">Peak Hours Analysis</h2>
           </div>
           <Suspense fallback={<SkeletonRectangle width="100%" height="400px" />}>
             <PeakHoursHeatmap
@@ -196,23 +206,25 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Info Section */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">About Analytics</h3>
-        <div className="text-sm text-blue-800 space-y-2">
-          <p>
-            <strong>Occupancy Trends:</strong> Track how parking lot occupancy changes over time. Use this to
-            identify patterns and optimize capacity allocation.
-          </p>
-          <p>
-            <strong>Contractor Performance:</strong> Compare compliance rates and violation counts across all
-            contractors. Lower compliance rates indicate frequent capacity breaches.
-          </p>
-          <p>
-            <strong>Peak Hours Analysis:</strong> Visualize parking usage patterns by day of week and hour of
-            day. Use this to identify peak times and plan accordingly.
-          </p>
-        </div>
-      </div>
+      <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <CardContent className="p-6">
+          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">About Analytics</h3>
+          <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+            <p>
+              <strong>Occupancy Trends:</strong> Track how parking lot occupancy changes over time. Use this to
+              identify patterns and optimize capacity allocation.
+            </p>
+            <p>
+              <strong>Contractor Performance:</strong> Compare compliance rates and violation counts across all
+              contractors. Lower compliance rates indicate frequent capacity breaches.
+            </p>
+            <p>
+              <strong>Peak Hours Analysis:</strong> Visualize parking usage patterns by day of week and hour of
+              day. Use this to identify peak times and plan accordingly.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Report Modal */}
       {isReportModalOpen && (

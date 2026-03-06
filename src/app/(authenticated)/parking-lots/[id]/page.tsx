@@ -26,12 +26,17 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { SkeletonRectangle } from "@/components/SkeletonLoader";
-import { formatDuration } from "@/lib/format-duration";
+import { SkeletonRectangle } from "@/components/misc/SkeletonLoader";
+import { formatDuration } from "@/lib/utils/format-duration";
+import { Button } from "@/components/shadcnComponents/button";
+import { Badge } from "@/components/shadcnComponents/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcnComponents/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/shadcnComponents/sheet";
+import ParkingLotForm from "@/components/forms/ParkingLotForm";
 
 // Code-split heavy components
-const SlotGrid = lazy(() => import("@/components/SlotGrid"));
-const DateRangePicker = lazy(() => import("@/components/DateRangePicker"));
+const SlotGrid = lazy(() => import("@/components/misc/SlotGrid"));
+const DateRangePicker = lazy(() => import("@/components/forms/DateRangePicker"));
 
 interface ParkingLot {
   _id: string;
@@ -128,6 +133,7 @@ export default function ParkingLotDetailPage() {
   const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
   // Time range selector for capacity chart
   const [capacityTimeRange, setCapacityTimeRange] = useState<
@@ -405,16 +411,18 @@ export default function ParkingLotDetailPage() {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="h-4  bg-gray-200 dark:bg-[#222428] rounded w-1/8 mb-8"></div>
+
+          <div className="h-8 bg-gray-200 dark:bg-[#222326] rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-[#2a2e37] rounded w-1/2 mb-8"></div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-lg shadow p-6 h-64"></div>
-              <div className="bg-white rounded-lg shadow p-6 h-96"></div>
+              <div className="bg-white dark:bg-[#111316] rounded-lg shadow dark:shadow-none p-6 h-64"></div>
+              <div className="bg-white dark:bg-[#111316] rounded-lg shadow dark:shadow-none p-6 h-96"></div>
             </div>
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow p-6 h-48"></div>
-              <div className="bg-white rounded-lg shadow p-6 h-64"></div>
+              <div className="bg-white dark:bg-[#111316] rounded-lg shadow dark:shadow-none p-6 h-48"></div>
+              <div className="bg-white dark:bg-[#111316] rounded-lg shadow dark:shadow-none p-6 h-64"></div>
             </div>
           </div>
         </div>
@@ -427,22 +435,22 @@ export default function ParkingLotDetailPage() {
       <div className="space-y-6">
         <Link
           href="/parking-lots"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700"
+          className="inline-flex items-center text-blue-600 dark:text-[#818cf8] hover:text-blue-700 dark:hover:text-[#a5b4fc]"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Parking Lots
         </Link>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-12 text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-800 text-lg mb-2">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-12 text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+          <p className="text-red-800 dark:text-red-300 text-lg mb-2">
             {error || "Parking lot not found"}
           </p>
-          <button
+          <Button
             onClick={() => router.push("/parking-lots")}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            variant="destructive"
           >
             Go to Parking Lots
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -457,47 +465,40 @@ export default function ParkingLotDetailPage() {
       <div>
         <Link
           href="/parking-lots"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
+          className="inline-flex items-center text-blue-600 dark:text-[#818cf8] hover:text-blue-700 dark:hover:text-[#a5b4fc] mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Parking Lots
         </Link>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] mb-2">
               {parkingLot.name}
             </h1>
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-600 dark:text-[#9ca3af]">
               <MapPin className="w-4 h-4 mr-2" />
               <span>{parkingLot.location.address}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href={`/parking-lots/${id}/live`}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              <Video className="w-4 h-4" />
-              View Live Feed
-            </Link>
-            {isAdmin && (
-              <Link
-                href={`/parking-lots/${id}/edit`}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
-              >
-                <Edit className="w-4 h-4" />
-                Edit
+            <Button asChild>
+              <Link target="_blank" href={`/parking-lots/${id}/live`}>
+                <Video className="w-4 h-4 mr-2" />
+                View Live Feed
               </Link>
+            </Button>
+            {isAdmin && (
+              <Button
+                variant="secondary"
+                onClick={() => setIsEditSheetOpen(true)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
             )}
-            <div
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                parkingLot.status === "active"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
+            <Badge variant={parkingLot.status === "active" ? "success" : "secondary"}>
               {parkingLot.status}
-            </div>
+            </Badge>
           </div>
         </div>
       </div>
@@ -512,22 +513,22 @@ export default function ParkingLotDetailPage() {
               {activeAlerts.map((alert) => (
                 <div
                   key={alert._id}
-                  className={`rounded-lg shadow p-4 border-l-4 ${
+                  className={`rounded-lg shadow dark:shadow-none p-4 border-l-4 ${
                     alert.severity === "critical"
-                      ? "bg-red-50 border-red-500"
+                      ? "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600"
                       : alert.severity === "warning"
-                        ? "bg-yellow-50 border-yellow-500"
-                        : "bg-blue-50 border-blue-500"
+                        ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 dark:border-yellow-600"
+                        : "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-600"
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
+                    <div className="shrink-0 mt-0.5">
                       {alert.severity === "critical" ? (
-                        <AlertCircle className="w-6 h-6 text-red-600" />
+                        <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                       ) : alert.severity === "warning" ? (
-                        <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                        <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                       ) : (
-                        <AlertCircle className="w-6 h-6 text-blue-600" />
+                        <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -536,10 +537,10 @@ export default function ParkingLotDetailPage() {
                           <h3
                             className={`font-bold text-lg ${
                               alert.severity === "critical"
-                                ? "text-red-900"
+                                ? "text-red-900 dark:text-red-300"
                                 : alert.severity === "warning"
-                                  ? "text-yellow-900"
-                                  : "text-blue-900"
+                                  ? "text-yellow-900 dark:text-yellow-300"
+                                  : "text-blue-900 dark:text-blue-300"
                             }`}
                           >
                             {alert.title}
@@ -547,16 +548,16 @@ export default function ParkingLotDetailPage() {
                           <p
                             className={`text-sm mt-1 ${
                               alert.severity === "critical"
-                                ? "text-red-800"
+                                ? "text-red-800 dark:text-red-400"
                                 : alert.severity === "warning"
-                                  ? "text-yellow-800"
-                                  : "text-blue-800"
+                                  ? "text-yellow-800 dark:text-yellow-400"
+                                  : "text-blue-800 dark:text-blue-400"
                             }`}
                           >
                             {alert.message}
                           </p>
                           {alert.type === "overparking" && alert.metadata && (
-                            <div className="mt-2 text-sm font-semibold text-red-900">
+                            <div className="mt-2 text-sm font-semibold text-red-900 dark:text-red-300">
                               <p>
                                 Contractor:{" "}
                                 {alert.contractorId?.name || "Unknown"}
@@ -572,18 +573,18 @@ export default function ParkingLotDetailPage() {
                           )}
                         </div>
                         <span
-                          className={`flex-shrink-0 px-2 py-1 text-xs font-bold rounded uppercase ${
+                          className={`shrink-0 px-2 py-1 text-xs font-bold rounded uppercase ${
                             alert.severity === "critical"
-                              ? "bg-red-200 text-red-900"
+                              ? "bg-red-200 dark:bg-red-900/50 text-red-900 dark:text-red-200"
                               : alert.severity === "warning"
-                                ? "bg-yellow-200 text-yellow-900"
-                                : "bg-blue-200 text-blue-900"
+                                ? "bg-yellow-200 dark:bg-yellow-900/50 text-yellow-900 dark:text-yellow-200"
+                                : "bg-blue-200 dark:bg-blue-900/50 text-blue-900 dark:text-blue-200"
                           }`}
                         >
                           {alert.severity}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 mt-2">
+                      <p className="text-xs text-gray-600 dark:text-[#9ca3af] mt-2">
                         {new Date(alert.createdAt).toLocaleString()}
                       </p>
                     </div>
@@ -594,15 +595,9 @@ export default function ParkingLotDetailPage() {
           )}
 
           {/* Slot Grid */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Parking Slots</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {occupied} / {parkingLot.totalSlots} occupied (
-                {(occupancyRate * 100).toFixed(1)}%)
-              </p>
-            </div>
-            <div className="p-6">
+          <Card>
+
+            <CardContent className="pt-6">
               <Suspense
                 fallback={<SkeletonRectangle width="100%" height="300px" />}
               >
@@ -611,51 +606,40 @@ export default function ParkingLotDetailPage() {
                   totalSlots={parkingLot.totalSlots}
                 />
               </Suspense>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Capacity Trend Chart */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
+          <Card>
+            <CardHeader className="border-b border-gray-200 dark:border-[#2a2e37]">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Capacity Trend
-                </h2>
+                <CardTitle>Capacity Trend</CardTitle>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    size="sm"
+                    variant={capacityTimeRange === "24h" ? "default" : "outline"}
                     onClick={() => setCapacityTimeRange("24h")}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                      capacityTimeRange === "24h"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
                   >
                     24h
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={capacityTimeRange === "7d" ? "default" : "outline"}
                     onClick={() => setCapacityTimeRange("7d")}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                      capacityTimeRange === "7d"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
                   >
                     7d
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={capacityTimeRange === "30d" ? "default" : "outline"}
                     onClick={() => setCapacityTimeRange("30d")}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                      capacityTimeRange === "30d"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
                   >
                     30d
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
-            <div className="p-6">
+            </CardHeader>
+            <CardContent className="pt-6">
               {capacityHistory.length > 0 ? (
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -677,7 +661,7 @@ export default function ParkingLotDetailPage() {
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
-                        className="stroke-gray-200"
+                        className="stroke-gray-200 dark:stroke-gray-700"
                       />
                       <XAxis
                         dataKey="label"
@@ -697,10 +681,13 @@ export default function ParkingLotDetailPage() {
                         labelFormatter={(_, payload) =>
                           payload?.[0]?.payload?.label
                         }
-                        formatter={(value: number, name: string) => [
-                          name === "occupied" ? `${value} occupied` : value,
-                          name === "occupied" ? "Avg occupied" : name,
-                        ]}
+                        formatter={(value, name) => {
+                          const val = value ?? 0;
+                          return [
+                            name === "occupied" ? `${val} occupied` : val,
+                            name === "occupied" ? "Avg occupied" : name,
+                          ];
+                        }}
                         contentStyle={{ fontSize: 12 }}
                       />
                       <Area
@@ -716,29 +703,28 @@ export default function ParkingLotDetailPage() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-gray-500 dark:text-[#71717a] text-center py-8">
                   No capacity data available for this period. Data appears when
                   the lot camera sends occupancy updates.
                 </p>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Entry/Exit Activity Log */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
+          <Card>
+            <CardHeader className="border-b border-gray-200 dark:border-[#2a2e37]">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Entry/Exit Log
-                </h2>
-                <button
+                <CardTitle>Entry/Exit Log</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() =>
                     setShowActivityDatePicker(!showActivityDatePicker)
                   }
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   {showActivityDatePicker ? "Hide Filter" : "Filter by Date"}
-                </button>
+                </Button>
               </div>
               {showActivityDatePicker && (
                 <div className="mt-4">
@@ -753,19 +739,19 @@ export default function ParkingLotDetailPage() {
                   </Suspense>
                 </div>
               )}
-            </div>
-            <div className="p-6">
+            </CardHeader>
+            <CardContent className="pt-6">
               {recentActivity.length > 0 ? (
                 <div className="space-y-3">
                   {recentActivity.map((record) => (
                     <div
                       key={record._id}
-                      className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg"
+                      className="flex items-start gap-4 p-3 bg-gray-50 dark:bg-[#181a1f] rounded-lg border border-gray-200 dark:border-[#2a2e37]"
                     >
                       {/* Vehicle Image if available */}
                       {(record.entry.image || record.exit?.image) && (
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                        <div className="shrink-0">
+                          <div className="w-16 h-16 bg-gray-200 dark:bg-[#2a2e37] rounded-lg overflow-hidden">
                             {record.status === "inside" &&
                             record.entry.image ? (
                               <img
@@ -783,7 +769,7 @@ export default function ParkingLotDetailPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <ImageIcon className="w-6 h-6 text-gray-400" />
+                                <ImageIcon className="w-6 h-6 text-gray-400 dark:text-[#71717a]" />
                               </div>
                             )}
                           </div>
@@ -791,10 +777,10 @@ export default function ParkingLotDetailPage() {
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
                           {record.plateNumber}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-[#9ca3af]">
                           {record.status === "inside" ? "Entered" : "Exited"} at{" "}
                           {new Date(
                             record.status === "inside"
@@ -804,227 +790,276 @@ export default function ParkingLotDetailPage() {
                           ).toLocaleString()}
                         </p>
                         {record.status === "exited" && record.duration && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-[#71717a] mt-1">
                             Duration: {formatDuration(record.duration)}
                           </p>
                         )}
                       </div>
 
-                      <div
-                        className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium ${
-                          record.status === "inside"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
+                      <Badge variant={record.status === "inside" ? "default" : "secondary"}>
                         {record.status}
-                      </div>
+                      </Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-gray-500 dark:text-[#71717a] text-center py-8">
                   No recent activity
                 </p>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right Column - Sidebar */}
         <div className="space-y-6">
           {/* Contractor Info */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Contractor</h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">Name</p>
-                <p className="font-medium text-gray-900">
-                  {parkingLot.contractorId.name}
-                </p>
+          <Card>
+            <CardHeader className="border-b border-gray-200 dark:border-[#2a2e37]">
+              <div className="flex items-center justify-between">
+                <CardTitle>Contractor</CardTitle>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                >
+                  <Link href={`/contractors/${parkingLot.contractorId._id}`}>
+                    View Details
+                  </Link>
+                </Button>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Contact Person</p>
-                <p className="font-medium text-gray-900">
-                  {parkingLot.contractorId.contactPerson}
-                </p>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Name</p>
+                  <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
+                    {parkingLot.contractorId.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Contact Person</p>
+                  <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
+                    {parkingLot.contractorId.contactPerson}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Phone</p>
+                  <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
+                    {parkingLot.contractorId.phone}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Allocated Capacity</p>
+                  <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
+                    {parkingLot.contractorId.contractDetails.allocatedCapacity}{" "}
+                    vehicles
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-[#9ca3af]">Contract Period</p>
+                  <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
+                    {new Date(
+                      parkingLot.contractorId.contractDetails.startDate,
+                    ).toLocaleDateString()}{" "}
+                    -{" "}
+                    {new Date(
+                      parkingLot.contractorId.contractDetails.endDate,
+                    ).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Phone</p>
-                <p className="font-medium text-gray-900">
-                  {parkingLot.contractorId.phone}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Allocated Capacity</p>
-                <p className="font-medium text-gray-900">
-                  {parkingLot.contractorId.contractDetails.allocatedCapacity}{" "}
-                  vehicles
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Contract Period</p>
-                <p className="font-medium text-gray-900">
-                  {new Date(
-                    parkingLot.contractorId.contractDetails.startDate,
-                  ).toLocaleDateString()}{" "}
-                  -{" "}
-                  {new Date(
-                    parkingLot.contractorId.contractDetails.endDate,
-                  ).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Camera Status */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Camera Health
-            </h3>
-            <div className="space-y-4">
-              {/* Gate Camera */}
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <Camera className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">Gate Camera</p>
-                      <p className="text-xs text-gray-500">
-                        {parkingLot.gateCamera.id}
-                      </p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Camera Health</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Gate Camera */}
+                <div className="p-3 bg-gray-50 dark:bg-[#181a1f] rounded-lg border border-gray-200 dark:border-[#2a2e37]">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <Camera className="w-5 h-5 text-gray-600 dark:text-[#9ca3af]" />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">Gate Camera</p>
+                        <p className="text-xs text-gray-500 dark:text-[#71717a]">
+                          {parkingLot.gateCamera.id}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isCameraOffline(
-                      parkingLot.gateCamera.status,
-                      parkingLot.gateCamera.lastSeen,
-                    ) && <AlertTriangle className="w-4 h-4 text-red-500" />}
-                    <div
-                      className={`w-3 h-3 rounded-full ${getCameraStatusColor(
+                    <div className="flex items-center gap-2">
+                      {isCameraOffline(
                         parkingLot.gateCamera.status,
                         parkingLot.gateCamera.lastSeen,
-                      )}`}
-                    />
+                      ) && <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />}
+                      <div
+                        className={`w-3 h-3 rounded-full ${getCameraStatusColor(
+                          parkingLot.gateCamera.status,
+                          parkingLot.gateCamera.lastSeen,
+                        )}`}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="text-xs text-gray-600">
-                  <p>
-                    Status:{" "}
-                    <span
-                      className={`font-medium ${
-                        isCameraOffline(
+                  <div className="text-xs text-gray-600 dark:text-[#9ca3af]">
+                    <p>
+                      Status:{" "}
+                      <span
+                        className={`font-medium ${
+                          isCameraOffline(
+                            parkingLot.gateCamera.status,
+                            parkingLot.gateCamera.lastSeen,
+                          )
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-green-600 dark:text-green-400"
+                        }`}
+                      >
+                        {isCameraOffline(
                           parkingLot.gateCamera.status,
                           parkingLot.gateCamera.lastSeen,
                         )
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {isCameraOffline(
-                        parkingLot.gateCamera.status,
-                        parkingLot.gateCamera.lastSeen,
-                      )
-                        ? "Offline"
-                        : "Online"}
-                    </span>
-                  </p>
-                  <p>
-                    Last seen: {formatLastSeen(parkingLot.gateCamera.lastSeen)}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    {new Date(parkingLot.gateCamera.lastSeen).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Lot Camera */}
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <Camera className="w-5 h-5 text-gray-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">Lot Camera</p>
-                      <p className="text-xs text-gray-500">
-                        {parkingLot.lotCamera.id}
-                      </p>
-                    </div>
+                          ? "Offline"
+                          : "Online"}
+                      </span>
+                    </p>
+                    <p>
+                      Last seen: {formatLastSeen(parkingLot.gateCamera.lastSeen)}
+                    </p>
+                    <p className="text-[10px] text-gray-400 dark:text-[#71717a] mt-1">
+                      {new Date(parkingLot.gateCamera.lastSeen).toLocaleString()}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isCameraOffline(
-                      parkingLot.lotCamera.status,
-                      parkingLot.lotCamera.lastSeen,
-                    ) && <AlertTriangle className="w-4 h-4 text-red-500" />}
-                    <div
-                      className={`w-3 h-3 rounded-full ${getCameraStatusColor(
+                </div>
+
+                {/* Lot Camera */}
+                <div className="p-3 bg-gray-50 dark:bg-[#181a1f] rounded-lg border border-gray-200 dark:border-[#2a2e37]">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <Camera className="w-5 h-5 text-gray-600 dark:text-[#9ca3af]" />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">Lot Camera</p>
+                        <p className="text-xs text-gray-500 dark:text-[#71717a]">
+                          {parkingLot.lotCamera.id}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isCameraOffline(
                         parkingLot.lotCamera.status,
                         parkingLot.lotCamera.lastSeen,
-                      )}`}
-                    />
+                      ) && <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />}
+                      <div
+                        className={`w-3 h-3 rounded-full ${getCameraStatusColor(
+                          parkingLot.lotCamera.status,
+                          parkingLot.lotCamera.lastSeen,
+                        )}`}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="text-xs text-gray-600">
-                  <p>
-                    Status:{" "}
-                    <span
-                      className={`font-medium ${
-                        isCameraOffline(
+                  <div className="text-xs text-gray-600 dark:text-[#9ca3af]">
+                    <p>
+                      Status:{" "}
+                      <span
+                        className={`font-medium ${
+                          isCameraOffline(
+                            parkingLot.lotCamera.status,
+                            parkingLot.lotCamera.lastSeen,
+                          )
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-green-600 dark:text-green-400"
+                        }`}
+                      >
+                        {isCameraOffline(
                           parkingLot.lotCamera.status,
                           parkingLot.lotCamera.lastSeen,
                         )
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {isCameraOffline(
-                        parkingLot.lotCamera.status,
-                        parkingLot.lotCamera.lastSeen,
-                      )
-                        ? "Offline"
-                        : "Online"}
-                    </span>
-                  </p>
-                  <p>
-                    Last seen: {formatLastSeen(parkingLot.lotCamera.lastSeen)}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    {new Date(parkingLot.lotCamera.lastSeen).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Vehicles Currently Inside */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Vehicles Inside ({currentVehicles.length})
-            </h3>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {currentVehicles.length > 0 ? (
-                currentVehicles.map((vehicle) => (
-                  <div key={vehicle._id} className="p-3 bg-gray-50 rounded-lg">
-                    <p className="font-medium text-gray-900">
-                      {vehicle.plateNumber}
+                          ? "Offline"
+                          : "Online"}
+                      </span>
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Duration: {formatDuration(vehicle.currentDuration || 0)}
+                    <p>
+                      Last seen: {formatLastSeen(parkingLot.lotCamera.lastSeen)}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Entered:{" "}
-                      {new Date(vehicle.entry.timestamp).toLocaleTimeString()}
+                    <p className="text-[10px] text-gray-400 dark:text-[#71717a] mt-1">
+                      {new Date(parkingLot.lotCamera.lastSeen).toLocaleString()}
                     </p>
                   </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No vehicles inside
-                </p>
-              )}
-            </div>
-          </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Vehicles Currently Inside */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicles Inside ({currentVehicles.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {currentVehicles.length > 0 ? (
+                  currentVehicles.map((vehicle) => (
+                    <div key={vehicle._id} className="p-3 bg-gray-50 dark:bg-[#181a1f] rounded-lg border border-gray-200 dark:border-[#2a2e37]">
+                      <p className="font-medium text-gray-900 dark:text-[#e5e7eb]">
+                        {vehicle.plateNumber}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-[#9ca3af]">
+                        Duration: {formatDuration(vehicle.currentDuration || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-[#71717a]">
+                        Entered:{" "}
+                        {new Date(vehicle.entry.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 dark:text-[#71717a] text-center py-4">
+                    No vehicles inside
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Edit Parking Lot Sheet */}
+      {isAdmin && (
+        <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
+          <SheetContent 
+            side="right" 
+            className="w-full sm:max-w-2xl overflow-y-auto bg-white dark:bg-[#111316] border-gray-200 dark:border-[#2a2e37]"
+          >
+            <SheetHeader>
+              <SheetTitle className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb]">
+                Edit Parking Lot
+              </SheetTitle>
+              <SheetDescription className="text-gray-600 dark:text-[#9ca3af]">
+                Update parking lot information
+              </SheetDescription>
+            </SheetHeader>
+            <div className="px-6 py-6">
+              <ParkingLotForm
+                mode="edit"
+                initialData={{
+                  _id: parkingLot._id,
+                  name: parkingLot.name,
+                  location: parkingLot.location,
+                  totalSlots: parkingLot.totalSlots,
+                  contractorId: parkingLot.contractorId._id,
+                }}
+                onSuccess={() => {
+                  setIsEditSheetOpen(false);
+                  fetchParkingLotDetails();
+                }}
+                onCancel={() => setIsEditSheetOpen(false)}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

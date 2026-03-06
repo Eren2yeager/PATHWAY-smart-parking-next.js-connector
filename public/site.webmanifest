@@ -1,5 +1,5 @@
 {
-  "name": "Smart Parking System",
+  "name": "Smart Parking",
   "short_name": "Smart Parking",
   "icons": [
     {
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#046ab4",
+  "background_color": "#046ab4",
   "display": "standalone"
 }

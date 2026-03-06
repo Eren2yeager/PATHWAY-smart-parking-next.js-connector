@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/app/api/auth/[...nextauth]/route';
-import Navbar from '@/components/Navbar';
-import ResponsiveSidebar from '@/components/ResponsiveSidebar';
-import SkipLinks from '@/components/SkipLinks';
+import Navbar from '@/components/layout/Navbar';
+import ResponsiveSidebar from '@/components/layout/ResponsiveSidebar';
+import SkipLinks from '@/components/layout/SkipLinks';
 
 export default async function AuthenticatedLayout({
   children,
@@ -13,11 +13,16 @@ export default async function AuthenticatedLayout({
   const session = await auth();
 
   if (!session || !session.user) {
-    redirect('/login');
+    redirect('/auth/signin');
+  }
+
+  // Check if user needs to set up password (first-time Google users)
+  if (session.user.needsPasswordSetup) {
+    redirect('/auth/setup-password');
   }
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen">
       {/* Skip Navigation Links */}
       <SkipLinks />
 
@@ -25,7 +30,7 @@ export default async function AuthenticatedLayout({
       <ResponsiveSidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-20">
         {/* Navbar */}
         <Navbar />
 
