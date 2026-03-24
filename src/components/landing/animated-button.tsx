@@ -13,7 +13,7 @@ interface AnimatedButtonProps {
 }
 
 export function AnimatedButton({ href, children, variant = "primary", className }: AnimatedButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold rounded-xl transition-all relative overflow-hidden group";
+  const baseStyles = "inline-flex items-center justify-center gap-2 px-6 py-4 font-semibold rounded-xl transition-all relative overflow-hidden group";
   
   const variantStyles = {
     primary: "bg-white text-blue-600 shadow-lg hover:shadow-2xl",

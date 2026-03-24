@@ -13,7 +13,7 @@ import {
 } from "@/components/shadcnComponents/popover";
 import { Button } from "@/components/shadcnComponents/button";
 import { Badge } from "@/components/shadcnComponents/badge";
-
+import Link from "next/link";
 interface Alert {
   _id: string;
   type: string;
@@ -89,7 +89,7 @@ export default function Navbar() {
           >
             <PanelRight className="w-5 h-5" aria-hidden="true" />
           </button>
-          <div className="flex items-center justify-center w-full gap-3">
+          <Link href={"/"} className="flex items-center justify-center w-full gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 dark:bg-[#4f46e5]">
               <AnimatedCarIcon />
             </div>
@@ -97,7 +97,7 @@ export default function Navbar() {
               <h2 className="text-md font-bold text-gray-900 dark:text-[#e5e7eb]">Smart Parking</h2>
               <p className="text-[10px] text-gray-500 dark:text-[#9ca3af] font-semibold">MCD System</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -125,7 +125,7 @@ export default function Navbar() {
             </PopoverTrigger>
             <PopoverContent align="end" className="w-96 p-0 border-gray-200 dark:border-[#2a2e37]">
               <div className="p-4 border-b border-gray-200 dark:border-[#2a2e37]">
-                <h3 className="font-semibold text-gray-900 dark                 :text-[#e5e7eb]">
+                <h3 className="font-semibold text-gray-900 dark:text-[#e5e7eb]">
                   Active Alerts ({activeAlerts.length})
                 </h3>
               </div>

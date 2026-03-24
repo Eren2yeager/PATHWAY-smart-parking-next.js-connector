@@ -10,20 +10,22 @@ import { MapPinIcon } from "@/components/icons/map-pin";
 import { FeatureCard } from "@/components/landing/feature-card";
 import { StatCard } from "@/components/landing/stat-card";
 import { FeatureSection } from "@/components/landing/feature-section";
-import { AnimatedButton } from "@/components/landing/animated-button";
 import { FloatingOrbs } from "@/components/landing/floating-orbs";
 import { ScrollIndicator } from "@/components/landing/scroll-indicator";
+import { HeroButtons } from "@/components/landing/hero-buttons";
 import GradualBlur from "@/components/shadcnComponents/GradualBlur";
 export default async function Home() {
-  // Redirect to dashboard if already authenticated
+  let isAuthenticated = false;
+
+  // Check authentication status
   try {
     const session = await auth();
     if (session?.user) {
+      isAuthenticated = true;
       // Check if user needs to set up password
       if (session.user.needsPasswordSetup) {
         redirect("/auth/setup-password");
       }
-      redirect("/dashboard");
     }
   } catch (error) {
     // Ignore NEXT_REDIRECT errors as they are expected behavior
@@ -106,15 +108,7 @@ export default async function Home() {
               Real-time parking capacity enforcement and monitoring system for
               Municipal Corporations
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <AnimatedButton href="/auth/signin" variant="primary">
-                Get Started
-                <ArrowRight className="w-5 h-5" />
-              </AnimatedButton>
-              <AnimatedButton href="/dashboard" variant="secondary">
-                View Dashboard
-              </AnimatedButton>
-            </div>
+            <HeroButtons isAuthenticated={isAuthenticated} wantSignInButton={true}/>
           </div>
 
           {/* Feature Grid */}
@@ -244,10 +238,7 @@ export default async function Home() {
           <p className="text-xl text-blue-200 mb-8">
             Join municipal corporations using our smart parking solution
           </p>
-          <AnimatedButton href="/auth/signin" variant="primary">
-            Get Started Now
-            <ArrowRight className="w-5 h-5" />
-          </AnimatedButton>
+          <HeroButtons isAuthenticated={isAuthenticated} />
         </div>
       </div>
     </div>

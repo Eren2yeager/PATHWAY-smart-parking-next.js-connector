@@ -4,15 +4,39 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { WebRTCClient, Detection } from '@/lib/realtime/webrtc-client';
 import CameraPreview from '@/components/camera/CameraPreview';
+import { Button } from '@/components/shadcnComponents/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shadcnComponents/card';
+import { Input } from '@/components/shadcnComponents/input';
+import { Badge } from '@/components/shadcnComponents/badge';
+import { 
+  Video, 
+  Monitor, 
+  Wifi, 
+  WifiOff, 
+  Play, 
+  Square, 
+  Settings, 
+  Activity, 
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  MapPin,
+  Camera as CameraIcon,
+  ParkingSquare
+} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/shadcnComponents/alert';
 
 function CameraPageContent() {
   const searchParams = useSearchParams();
   const parkingLotId = searchParams.get('lotId');
   const cameraType = searchParams.get('type') as 'gate' | 'lot' | null;
   
-  const [backendUrl, setBackendUrl] = useState(process.env.NEXT_PUBLIC_PATHWAY_BACKEND_WS_URL || process.env.NEXT_PUBLIC_PYTHON_BACKEND_WS_URL || 'ws://localhost:8000');
+  const [backendUrl, setBackendUrl] = useState(
+    process.env.NEXT_PUBLIC_PATHWAY_BACKEND_WS_URL || 
+    process.env.NEXT_PUBLIC_PYTHON_BACKEND_WS_URL || 
+    'ws://localhost:8000'
+  );
   const [roomId, setRoomId] = useState(() => {
-    // Generate room ID based on parking lot and camera type if provided
     if (parkingLotId && cameraType) {
       return `${parkingLotId}-${cameraType}`;
     }
@@ -28,17 +52,8 @@ function CameraPageContent() {
   const [frameRate, setFrameRate] = useState<number>(0);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [streamType, setStreamType] = useState<'camera' | 'screen'>('camera');
-  
-  // WebRTC Remote Stream state
-  const [remoteConnected, setRemoteConnected] = useState(false);
-  const [remoteFps, setRemoteFps] = useState(10);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteCanvasRef = useRef<HTMLCanvasElement>(null);
-  const remoteOverlayRef = useRef<HTMLCanvasElement>(null);
-  const remoteIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const signalingWsRef = useRef<WebSocket | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   
   const webrtcClientRef = useRef<WebRTCClient | null>(null);
   const frameCountRef = useRef<number>(0);
@@ -50,7 +65,7 @@ function CameraPageContent() {
     setLogs(prev => [...prev.slice(-20), `[${timestamp}] ${message}`]);
   };
 
-  // Fetch parking lot details if ID is provided
+  // Fetch parking lot details
   useEffect(() => {
     if (parkingLotId) {
       const fetchParkingLot = async () => {
@@ -59,7 +74,7 @@ function CameraPageContent() {
           if (response.ok) {
             const result = await response.json();
             setParkingLotName(result.data.name);
-            addLog(`📍 Connected to: ${result.data.name}`);
+            addLog(`Connected to: ${result.data.name}`);
           }
         } catch (error) {
           console.error('Failed to fetch parking lot:', error);
@@ -87,61 +102,61 @@ function CameraPageContent() {
 
   const connectToSignaling = async () => {
     try {
+      setIsConnecting(true);
       setPermissionError(null);
       const wsUrl = `${backendUrl}/ws/webrtc-signaling`;
-      addLog(`🔗 Connecting to ${wsUrl}...`);
+      addLog(`Connecting to ${wsUrl}...`);
       
-      // Create WebRTC client
       webrtcClientRef.current = new WebRTCClient({
         signalingUrl: wsUrl,
         roomId: roomId,
         onDetection: (detections) => {
           setDetections(detections);
           frameCountRef.current++;
-          addLog(`📊 Received ${detections.length} detections`);
         },
         onConnectionStateChange: (state) => {
           setConnectionState(state);
-          addLog(`🔗 Connection state: ${state}`);
+          addLog(`Connection state: ${state}`);
         },
         onError: (error) => {
-          addLog(`❌ Error: ${error.message}`);
+          addLog(`Error: ${error.message}`);
           setPermissionError(error.message);
         },
       });
 
       await webrtcClientRef.current.connect();
       setConnected(true);
-      addLog(`✓ Connected to signaling server`);
+      addLog(`Connected to signaling server`);
     } catch (error: any) {
-      addLog(`❌ Connection failed: ${error.message}`);
+      addLog(`Connection failed: ${error.message}`);
       setPermissionError(error.message);
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   const startStreaming = async () => {
     if (!webrtcClientRef.current) {
-      addLog(`❌ Not connected to signaling server`);
+      addLog(`Not connected to signaling server`);
       return;
     }
 
     try {
+      setIsStarting(true);
       setPermissionError(null);
       
       let result;
       if (streamType === 'camera') {
-        addLog(`📹 Requesting camera access...`);
+        addLog(`Requesting camera access...`);
         result = await webrtcClientRef.current.requestCameraAccess();
       } else {
-        addLog(`🖥️ Requesting screen share access...`);
+        addLog(`Requesting screen share access...`);
         try {
           const screenStream = await navigator.mediaDevices.getDisplayMedia({
             video: { width: 1920, height: 1080 },
             audio: false
           });
           result = { success: true, stream: screenStream };
-          
-          // Manually set the localStream in the WebRTC client
           (webrtcClientRef.current as any).localStream = screenStream;
         } catch (err: any) {
           result = { success: false, error: err.message || 'Screen share denied' };
@@ -150,25 +165,26 @@ function CameraPageContent() {
       
       if (!result.success) {
         setPermissionError(result.error || `Failed to access ${streamType}`);
-        addLog(`❌ ${streamType === 'camera' ? 'Camera' : 'Screen share'} error: ${result.error}`);
+        addLog(`${streamType === 'camera' ? 'Camera' : 'Screen share'} error: ${result.error}`);
         return;
       }
 
       setStream(result.stream!);
-      addLog(`✓ ${streamType === 'camera' ? 'Camera' : 'Screen share'} access granted`);
+      addLog(`${streamType === 'camera' ? 'Camera' : 'Screen share'} access granted`);
       
       const videoTrack = result.stream!.getVideoTracks()[0];
       const settings = videoTrack.getSettings();
-      addLog(`📹 Resolution: ${settings.width}x${settings.height}`);
+      addLog(`Resolution: ${settings.width}x${settings.height}`);
       
-      // Start streaming (this will create peer connection and send offer)
       await webrtcClientRef.current.startStreaming();
       
       setStreaming(true);
-      addLog(`✓ Streaming started`);
+      addLog(`Streaming started`);
     } catch (error: any) {
-      addLog(`❌ Streaming error: ${error.message}`);
+      addLog(`Streaming error: ${error.message}`);
       setPermissionError(error.message);
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -182,7 +198,7 @@ function CameraPageContent() {
     setDetections([]);
     setFrameRate(0);
     frameCountRef.current = 0;
-    addLog(`✗ Streaming stopped`);
+    addLog(`Streaming stopped`);
   };
 
   const disconnect = () => {
@@ -195,10 +211,9 @@ function CameraPageContent() {
     
     setConnected(false);
     setConnectionState('disconnected');
-    addLog(`✗ Disconnected from signaling server`);
+    addLog(`Disconnected from signaling server`);
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (webrtcClientRef.current) {
@@ -208,267 +223,320 @@ function CameraPageContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0b0d] p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl shadow-2xl p-6 mb-6 border border-purple-500">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl">📹</div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white mb-1">Camera Sender</h1>
-              <p className="text-purple-100">Stream your camera to the backend for AI processing</p>
-              {parkingLotName && cameraType && (
-                <div className="mt-2 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <span className="text-2xl">{cameraType === 'gate' ? '🚪' : '🅿️'}</span>
-                  <div>
-                    <p className="text-sm text-purple-200">
-                      {cameraType === 'gate' ? 'Gate Camera' : 'Lot Camera'}
-                    </p>
-                    <p className="text-white font-semibold">{parkingLotName}</p>
-                  </div>
+        <Card className="border-blue-200 dark:border-blue-900">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-lg">
+                  <Video className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 </div>
+                <div>
+                  <CardTitle className="text-2xl">Camera Stream</CardTitle>
+                  <CardDescription>
+                    Stream your camera to the backend for AI processing
+                  </CardDescription>
+                </div>
+              </div>
+              {parkingLotName && cameraType && (
+                <Badge variant="secondary" className="flex items-center gap-2">
+                  {cameraType === 'gate' ? <MapPin className="w-4 h-4" /> : <ParkingSquare className="w-4 h-4" />}
+                  {parkingLotName} - {cameraType === 'gate' ? 'Gate' : 'Lot'}
+                </Badge>
               )}
             </div>
-          </div>
-        </div>
+          </CardHeader>
+        </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Configuration & Status */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Configuration Card */}
-            <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border border-purple-500/30">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span className="text-2xl">⚙️</span>
-                Configuration
-              </h2>
-              
-              <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-purple-300">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Backend WebSocket URL
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={backendUrl}
                     onChange={(e) => setBackendUrl(e.target.value)}
                     disabled={connected}
-                    className="w-full px-4 py-2 bg-gray-900 border border-purple-500/50 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
                     placeholder="ws://localhost:8000"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-purple-300">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Room ID
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={roomId}
                     onChange={(e) => setRoomId(e.target.value)}
                     disabled={connected}
-                    className="w-full px-4 py-2 bg-gray-900 border border-purple-500/50 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
                     placeholder="parking-camera-1"
                   />
-                  <p className="text-xs text-purple-400 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Use the same Room ID on the receiver page
                   </p>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Status Card */}
-            <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border border-purple-500/30">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span className="text-2xl">📊</span>
-                Status
-              </h2>
-              
-              <div className="space-y-3">
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                  connected ? 'bg-green-500/20 border border-green-500/50' : 'bg-gray-700/50 border border-gray-600'
-                }`}>
-                  <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
-                  <span className={`text-sm font-medium ${connected ? 'text-green-400' : 'text-gray-400'}`}>
+            {/* Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#111316] border border-gray-200 dark:border-[#2a2e37]">
+                  <div className="flex items-center gap-2">
+                    {connected ? (
+                      <Wifi className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <WifiOff className="w-4 h-4 text-gray-400" />
+                    )}
+                    <span className="text-sm font-medium">Connection</span>
+                  </div>
+                  <Badge variant={connected ? "default" : "secondary"}>
                     {connected ? 'Connected' : 'Disconnected'}
-                  </span>
+                  </Badge>
                 </div>
-                
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                  streaming ? 'bg-red-500/20 border border-red-500/50' : 'bg-gray-700/50 border border-gray-600'
-                }`}>
-                  <div className={`w-3 h-3 rounded-full ${streaming ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`} />
-                  <span className={`text-sm font-medium ${streaming ? 'text-red-400' : 'text-gray-400'}`}>
-                    {streaming ? 'Streaming' : 'Not Streaming'}
-                  </span>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#111316] border border-gray-200 dark:border-[#2a2e37]">
+                  <div className="flex items-center gap-2">
+                    <CameraIcon className={`w-4 h-4 ${streaming ? 'text-red-600 dark:text-red-400' : 'text-gray-400'}`} />
+                    <span className="text-sm font-medium">Streaming</span>
+                  </div>
+                  <Badge variant={streaming ? "destructive" : "secondary"}>
+                    {streaming ? 'Live' : 'Stopped'}
+                  </Badge>
                 </div>
 
                 {streaming && (
                   <>
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-500/20 border border-blue-500/50">
-                      <span className="text-sm font-medium text-blue-400">
-                        Frame Rate: {frameRate} FPS
-                      </span>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#111316] border border-gray-200 dark:border-[#2a2e37]">
+                      <span className="text-sm font-medium">Frame Rate</span>
+                      <Badge variant="outline">{frameRate} FPS</Badge>
                     </div>
-                    
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-500/20 border border-purple-500/50">
-                      <span className="text-sm font-medium text-purple-400">
-                        Connection: {connectionState}
-                      </span>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#111316] border border-gray-200 dark:border-[#2a2e37]">
+                      <span className="text-sm font-medium">State</span>
+                      <Badge variant="outline">{connectionState}</Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#111316] border border-gray-200 dark:border-[#2a2e37]">
+                      <span className="text-sm font-medium">Detections</span>
+                      <Badge variant="outline">{detections.length}</Badge>
                     </div>
                   </>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Permission Error Display */}
+            {/* Error Alert */}
             {permissionError && (
-              <div className="bg-red-900/50 border border-red-500/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚠️</span>
-                  <div>
-                    <h3 className="font-semibold text-red-300 mb-1">Permission Error</h3>
-                    <p className="text-sm text-red-200">{permissionError}</p>
-                  </div>
-                </div>
-              </div>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{permissionError}</AlertDescription>
+              </Alert>
             )}
 
-            {/* Quick Tips */}
-            <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl shadow-2xl p-6 border border-purple-500/30">
-              <h3 className="font-semibold mb-3 text-purple-300 flex items-center gap-2">
-                <span className="text-xl">💡</span>
-                Quick Tips
-              </h3>
-              <ul className="text-sm space-y-2 text-purple-200">
-                <li>• Use back camera for better quality</li>
-                <li>• Keep phone charged while streaming</li>
-                <li>• Ensure stable WiFi connection</li>
-                <li>• Mount phone for steady view</li>
-              </ul>
-            </div>
+            {/* Tips */}
+            <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2 text-blue-900 dark:text-blue-300">
+                  <CheckCircle className="w-4 h-4" />
+                  Quick Tips
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm space-y-2 text-blue-800 dark:text-blue-400">
+                  <li>• Use back camera for better quality</li>
+                  <li>• Keep device charged while streaming</li>
+                  <li>• Ensure stable WiFi connection</li>
+                  <li>• Mount device for steady view</li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column - Video & Controls */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Controls Card */}
-            <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border border-purple-500/30">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span className="text-2xl">🎮</span>
-                Controls
-              </h2>
-              
-              {/* Stream Type Selector */}
-              {connected && !streaming && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2 text-purple-300">
-                    Stream Source
-                  </label>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setStreamType('camera')}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
-                        streamType === 'camera'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
-                    >
-                      📹 Camera
-                    </button>
-                    <button
-                      onClick={() => setStreamType('screen')}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
-                        streamType === 'screen'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
-                    >
-                      🖥️ Screen
-                    </button>
+            {/* Controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Play className="w-5 h-5" />
+                  Controls
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Stream Type Selector */}
+                {connected && !streaming && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Stream Source
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant={streamType === 'camera' ? 'default' : 'outline'}
+                        onClick={() => setStreamType('camera')}
+                        className="w-full"
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Camera
+                      </Button>
+                      <Button
+                        variant={streamType === 'screen' ? 'default' : 'outline'}
+                        onClick={() => setStreamType('screen')}
+                        className="w-full"
+                      >
+                        <Monitor className="w-4 h-4 mr-2" />
+                        Screen
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              <div className="flex gap-3">
-                {!connected ? (
-                  <button
-                    onClick={connectToSignaling}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-                  >
-                    🔗 Connect to Backend
-                  </button>
-                ) : (
-                  <>
-                    {!streaming ? (
-                      <button
-                        onClick={startStreaming}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-                      >
-                        ▶️ Start {streamType === 'camera' ? 'Camera' : 'Screen Share'}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={stopStreaming}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-                      >
-                        ⏹️ Stop Streaming
-                      </button>
-                    )}
-                    <button
-                      onClick={disconnect}
-                      className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-                    >
-                      ✗ Disconnect
-                    </button>
-                  </>
                 )}
-              </div>
-            </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  {!connected ? (
+                    <Button
+                      onClick={connectToSignaling}
+                      disabled={isConnecting}
+                      className="flex-1"
+                    >
+                      {isConnecting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <Wifi className="w-4 h-4 mr-2" />
+                          Connect to Backend
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <>
+                      {!streaming ? (
+                        <Button
+                          onClick={startStreaming}
+                          disabled={isStarting}
+                          className="flex-1"
+                          variant="default"
+                        >
+                          {isStarting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Starting...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 mr-2" />
+                              Start {streamType === 'camera' ? 'Camera' : 'Screen'}
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={stopStreaming}
+                          className="flex-1"
+                          variant="destructive"
+                        >
+                          <Square className="w-4 h-4 mr-2" />
+                          Stop Streaming
+                        </Button>
+                      )}
+                      <Button
+                        onClick={disconnect}
+                        variant="outline"
+                      >
+                        Disconnect
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Video Preview */}
-            <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-purple-500/30">
-              <div className="relative bg-black aspect-video">
-                <CameraPreview stream={stream} detections={detections} />
-                {streaming && (
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
-                    🔴 LIVE
-                  </div>
-                )}
-              </div>
-            </div>
+            <Card>
+              <CardContent className="p-0">
+                <div className="relative bg-black aspect-video rounded-lg overflow-hidden">
+                  <CameraPreview stream={stream} detections={detections} />
+                  {streaming && (
+                    <div className="absolute top-4 left-4">
+                      <Badge variant="destructive" className="animate-pulse">
+                        <div className="w-2 h-2 bg-white rounded-full mr-2" />
+                        LIVE
+                      </Badge>
+                    </div>
+                  )}
+
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Instructions */}
-            <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 border border-blue-500/30 rounded-xl p-6">
-              <h3 className="font-semibold mb-3 text-blue-300 flex items-center gap-2">
-                <span className="text-xl">📋</span>
-                How to Use
-              </h3>
-              <ol className="text-sm space-y-2 list-decimal list-inside text-blue-200">
-                <li>Make sure Python backend is running on port 8000</li>
-                <li>Enter the backend URL (ws://your-ip:8000)</li>
-                <li>Set a Room ID (same as receiver)</li>
-                <li>Click "Connect to Backend"</li>
-                <li>Click "Start Streaming"</li>
-                <li>Open test-backend page on another device</li>
-                <li>You'll see your stream with AI detections!</li>
-              </ol>
-            </div>
+            <Card className="bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
+              <CardHeader>
+                <CardTitle className="text-sm text-purple-900 dark:text-purple-300">
+                  How to Use
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="text-sm space-y-2 list-decimal list-inside text-purple-800 dark:text-purple-400">
+                  <li>Ensure Python backend is running on port 8000</li>
+                  <li>Enter the backend URL (ws://your-ip:8000)</li>
+                  <li>Set a Room ID (same as receiver)</li>
+                  <li>Click "Connect to Backend"</li>
+                  <li>Select Camera or Screen share</li>
+                  <li>Click "Start Streaming"</li>
+                  <li>Open receiver page to view with AI detections</li>
+                </ol>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
         {/* Activity Logs */}
-        <div className="mt-6 bg-gray-800 rounded-xl shadow-2xl p-6 border border-purple-500/30">
-          <h2 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
-            <span className="text-2xl">📝</span>
-            Activity Logs
-          </h2>
-          <div className="bg-black border border-green-500/30 text-green-400 p-4 rounded-lg font-mono text-sm max-h-64 overflow-y-auto shadow-inner">
-            {logs.length === 0 ? (
-              <div className="text-gray-500">Waiting for activity...</div>
-            ) : (
-              logs.map((log, idx) => <div key={idx} className="hover:bg-green-500/10 px-2 py-1 rounded">{log}</div>)
-            )}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Activity Logs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-gray-900 dark:bg-black border border-gray-700 dark:border-[#2a2e37] text-green-400 p-4 rounded-lg font-mono text-xs max-h-64 overflow-y-auto">
+              {logs.length === 0 ? (
+                <div className="text-gray-500">Waiting for activity...</div>
+              ) : (
+                logs.map((log, idx) => (
+                  <div key={idx} className="hover:bg-green-500/10 px-2 py-1 rounded">
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -476,7 +544,11 @@ function CameraPageContent() {
 
 export default function CameraPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    }>
       <CameraPageContent />
     </Suspense>
   );

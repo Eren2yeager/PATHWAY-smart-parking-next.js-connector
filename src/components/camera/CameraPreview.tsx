@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Detection } from '@/lib/realtime/webrtc-client';
-
+import {Video} from 'lucide-react';
 interface CameraPreviewProps {
   stream: MediaStream | null;
   detections: Detection[];
@@ -122,8 +122,8 @@ export default function CameraPreview({ stream, detections, onFrame }: CameraPre
       {!stream && (
         <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-900/50 backdrop-blur-sm">
           <div className="text-center">
-            <div className="text-6xl mb-4 animate-pulse">📹</div>
-            <div className="text-lg text-purple-300">Camera preview will appear here</div>
+            <Video className="text-6xl w-10 h-10 mx-auto mb-4 animate-pulse" />
+            <div className="text-lg text-">No stream available</div>
           </div>
         </div>
       )}

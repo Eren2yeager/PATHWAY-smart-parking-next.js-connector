@@ -46,7 +46,7 @@ function StatCard({
           <p className="text-sm font-medium text-gray-600 dark:text-[#9ca3af] mb-1">{title}</p>
           <div className="flex items-center gap-3">
             <p className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb]">
-              <CountUp to={typeof value === 'number' ? value : 0} duration={2} />
+              <CountUp to={typeof value === 'number' ? value : 0} duration={1} />
             </p>
             {trend && (
               <TrendIndicator
